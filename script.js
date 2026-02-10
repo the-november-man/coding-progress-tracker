@@ -78,6 +78,54 @@ function updateProgress() {
   progressText.textContent = `${pct}% completed (${done}/${questions.length})`;
 }
 
+// ================= IMPORT / EXPORT =================
+window.exportJSON = () => {
+  const blob = new Blob(
+    [JSON.stringify(questions, null, 2)],
+    { type: "application/json" }
+  );
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "coding-tracker-backup.json";
+  a.click();
+};
+
+window.toggleImport = () => {
+  importBox.style.display =
+    importBox.style.display === "none" ? "block" : "none";
+};
+
+window.importJSON = (append) => {
+  try {
+    const data = JSON.parse(importArea.value);
+
+    if (!Array.isArray(data)) {
+      alert("Invalid JSON format");
+      return;
+    }
+
+    // Basic validation
+    data.forEach(q => {
+      if (!q.name || !q.link) throw new Error();
+      q.tags = q.tags || [];
+      q.completed ??= false;
+      q.revised ??= false;
+      q.difficulty ??= "easy";
+    });
+
+    questions = append ? questions.concat(data) : data;
+
+    save();
+    render();
+
+    importArea.value = "";
+    importBox.style.display = "none";
+  } catch {
+    alert("Invalid JSON");
+  }
+};
+
 // ================= FIREBASE =================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
