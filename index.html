@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Coding Tracker</title>
 
-<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#6366f1">
 
 <style>
@@ -18,43 +17,113 @@ body.dark {
   --bg:#0f172a; --card:#1e293b; --text:#e5e7eb;
   --muted:#94a3b8; --border:#334155;
 }
+
 * { box-sizing:border-box; font-family:system-ui; }
 body { margin:0; background:var(--bg); color:var(--text); }
 .container { max-width:1150px; margin:40px auto; padding:24px; }
+
 .card {
-  background:var(--card); border-radius:14px; padding:20px;
-  margin-bottom:24px; box-shadow:0 10px 25px rgba(0,0,0,.08);
+  background:var(--card);
+  border-radius:14px;
+  padding:20px;
+  margin-bottom:24px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
 }
-.top-bar { display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+
+.top-bar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
 button {
-  padding:10px 16px; border-radius:8px; border:none;
-  background:var(--primary); color:#fff; font-weight:600; cursor:pointer;
+  padding:10px 16px;
+  border-radius:8px;
+  border:none;
+  background:var(--primary);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
 }
+
 button.outline {
-  background:transparent; color:var(--text);
+  background:transparent;
+  color:var(--text);
   border:1px solid var(--border);
 }
-input, select, textarea {
-  padding:10px; border-radius:8px;
-  border:1px solid var(--border); background:transparent; color:var(--text);
+
+.dark-btn {
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  padding:0;
+  font-size:18px;
 }
-textarea { width:100%; min-height:140px; }
+
+input, select {
+  padding:10px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--text);
+}
+
 .form-row { display:flex; gap:10px; flex-wrap:wrap; }
-.progress-bg { height:14px; background:var(--border); border-radius:999px; overflow:hidden; }
+
+.progress-bg {
+  height:14px;
+  background:var(--border);
+  border-radius:999px;
+  overflow:hidden;
+}
 .progress-bar {
-  height:100%; width:0%;
+  height:100%;
+  width:0%;
   background:linear-gradient(90deg,var(--primary),var(--secondary));
 }
-table { width:100%; border-collapse:collapse; margin-top:15px; }
-th,td { padding:12px; border-bottom:1px solid var(--border); }
-th { text-align:left; color:var(--muted); }
-td.center { text-align:center; }
-.tag {
-  display:inline-block; background:rgba(99,102,241,.15);
-  color:var(--primary); padding:4px 8px; border-radius:999px;
-  font-size:12px; margin-right:4px;
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
 }
-a { color:var(--primary); text-decoration:none; }
+th, td {
+  padding:12px;
+  border-bottom:1px solid var(--border);
+}
+th { color:var(--muted); text-align:left; }
+td.center { text-align:center; }
+
+.tag {
+  display:inline-block;
+  background:rgba(99,102,241,.15);
+  color:var(--primary);
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:12px;
+  margin-right:4px;
+}
+
+.diff {
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+}
+.diff.easy { background:#dcfce7; color:#166534; }
+.diff.medium { background:#fef9c3; color:#854d0e; }
+.diff.hard { background:#fee2e2; color:#991b1b; }
+
+.checkbox {
+  width:18px;
+  height:18px;
+  accent-color:var(--primary);
+}
+
+.leetcode-link img {
+  width:22px;
+  height:22px;
+}
 </style>
 </head>
 
@@ -63,12 +132,14 @@ a { color:var(--primary); text-decoration:none; }
 
 <div class="top-bar">
   <h1>📘 Coding Tracker</h1>
-  <button class="outline" onclick="toggleTheme()">🌙 Dark Mode</button>
+  <button class="outline dark-btn" onclick="toggleTheme()">🌙</button>
 </div>
 
 <div class="card">
   <strong>Progress</strong>
-  <div class="progress-bg"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="progress-bg">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
   <div id="progressText" style="margin-top:6px;"></div>
 </div>
 
@@ -76,38 +147,41 @@ a { color:var(--primary); text-decoration:none; }
   <strong>Add Question</strong>
   <div class="form-row" style="margin-top:10px;">
     <input id="qName" placeholder="Question name">
-    <input id="qLink" placeholder="Link">
+    <input id="qLink" placeholder="LeetCode link">
     <input id="qTags" placeholder="Tags (array, dp)">
+    <select id="qDifficulty">
+      <option value="easy">Easy</option>
+      <option value="medium">Medium</option>
+      <option value="hard">Hard</option>
+    </select>
     <button onclick="addQuestion()">Add</button>
   </div>
 </div>
 
 <div class="card">
-  <strong>Import / Export</strong>
+  <strong>Filters</strong>
   <div class="form-row" style="margin-top:10px;">
-    <button onclick="exportJSON()">📤 Export</button>
-    <button class="outline" onclick="toggleImport()">📥 Import</button>
+    <select id="tagFilter" onchange="render()">
+      <option value="all">All Tags</option>
+    </select>
+    <select id="difficultyFilter" onchange="render()">
+      <option value="all">All Difficulty</option>
+      <option value="easy">Easy</option>
+      <option value="medium">Medium</option>
+      <option value="hard">Hard</option>
+    </select>
   </div>
-  <div id="importBox" style="display:none; margin-top:12px;">
-    <textarea id="importArea" placeholder="Paste JSON here"></textarea>
-    <div class="form-row" style="margin-top:8px;">
-      <button onclick="importJSON(false)">Replace</button>
-      <button class="outline" onclick="importJSON(true)">Append</button>
-    </div>
-  </div>
-</div>
-
-<div class="card">
-  <strong>Filter by Tag</strong>
-  <select id="tagFilter" onchange="render()" style="margin-left:10px;">
-    <option value="all">All</option>
-  </select>
 
   <table>
     <thead>
       <tr>
-        <th>Question</th><th>Link</th><th>Tags</th>
-        <th>Done</th><th>Revised</th>
+        <th>#</th>
+        <th>Question</th>
+        <th>Link</th>
+        <th>Tags</th>
+        <th>Difficulty</th>
+        <th>Completed</th>
+        <th>Revised</th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
@@ -116,132 +190,7 @@ a { color:var(--primary); text-decoration:none; }
 
 </div>
 
-<!-- ================= APP LOGIC ================= -->
-<script>
-let questions = [];
-let dark = JSON.parse(localStorage.getItem("darkMode")) || false;
-if (dark) document.body.classList.add("dark");
-
-function toggleTheme() {
-  document.body.classList.toggle("dark");
-  localStorage.setItem("darkMode",
-    JSON.stringify(document.body.classList.contains("dark")));
-}
-
-function addQuestion(){
-  if(!qName.value || !qLink.value) return alert("Name & link required");
-  questions.push({
-    name:qName.value,
-    link:qLink.value,
-    tags:qTags.value.split(",").map(t=>t.trim()).filter(Boolean),
-    completed:false,
-    revised:false
-  });
-  qName.value=qLink.value=qTags.value="";
-  save(); render();
-}
-
-function exportJSON(){
-  const blob=new Blob([JSON.stringify(questions,null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="coding-tracker-backup.json";
-  a.click();
-}
-
-function toggleImport(){
-  importBox.style.display = importBox.style.display==="none"?"block":"none";
-}
-
-function importJSON(append){
-  try{
-    const data=JSON.parse(importArea.value);
-    if(!Array.isArray(data)) throw 0;
-    questions = append ? questions.concat(data) : data;
-    save(); render();
-    importArea.value=""; importBox.style.display="none";
-  }catch{
-    alert("Invalid JSON");
-  }
-}
-
-function updateProgress(){
-  const done=questions.filter(q=>q.completed).length;
-  const pct=questions.length?Math.round(done/questions.length*100):0;
-  progressBar.style.width=pct+"%";
-  progressText.textContent=`${pct}% completed (${done}/${questions.length})`;
-}
-
-function render(){
-  const tags=new Set();
-  questions.forEach(q=>q.tags.forEach(t=>tags.add(t)));
-  tagFilter.innerHTML='<option value="all">All</option>';
-  [...tags].sort().forEach(t=>tagFilter.innerHTML+=`<option>${t}</option>`);
-
-  tableBody.innerHTML="";
-  questions
-    .filter(q=>tagFilter.value==="all"||q.tags.includes(tagFilter.value))
-    .forEach((q,i)=>{
-      tableBody.innerHTML+=`
-      <tr>
-        <td>${q.name}</td>
-        <td><a href="${q.link}" target="_blank">Open</a></td>
-        <td>${q.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</td>
-        <td class="center"><input type="checkbox" ${q.completed?"checked":""}
-          onchange="questions[${i}].completed=!questions[${i}].completed;save();render();"></td>
-        <td class="center"><input type="checkbox" ${q.revised?"checked":""}
-          onchange="questions[${i}].revised=!questions[${i}].revised;save();render();"></td>
-      </tr>`;
-    });
-  updateProgress();
-}
-</script>
-
-<!-- ================= FIREBASE SYNC ================= -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDl4zL9enxU5JMjb_eXbauS7yRqCDUh1Qk",
-  authDomain: "coding-tracker-4feea.firebaseapp.com",
-  projectId: "coding-tracker-4feea",
-  appId: "1:981547014067:web:c22a572d5dec8df8b9ddc6"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-let userId = null;
-
-signInAnonymously(auth).then(result => {
-  userId = result.user.uid;
-  const ref = doc(db, "users", userId);
-
-  onSnapshot(ref, snap => {
-    if (snap.exists()) {
-      questions = snap.data().questions || [];
-      render();
-    }
-  });
-});
-
-window.save = async function () {
-  if (!userId) return;
-  await setDoc(doc(db, "users", userId), {
-    questions,
-    updatedAt: Date.now()
-  });
-};
-</script>
-
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
-}
-</script>
-
+<!-- IMPORTANT -->
+<script src="script.js" type="module"></script>
 </body>
 </html>
