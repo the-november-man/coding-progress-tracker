@@ -131,7 +131,7 @@ td.center { text-align:center; }
 <div class="container">
 
 <div class="top-bar">
-  <h1>📘 Coding Tracker</h1>
+  <h1>📘 Coding Progress Tracker</h1>
   <button class="outline dark-btn" onclick="toggleTheme()">🌙</button>
 </div>
 
@@ -157,6 +157,24 @@ td.center { text-align:center; }
     <button onclick="addQuestion()">Add</button>
   </div>
 </div>
+
+  <div class="card">
+  <strong>Import / Export</strong>
+  <div class="form-row" style="margin-top:10px;">
+    <button onclick="exportJSON()">📤 Export</button>
+    <button class="outline" onclick="toggleImport()">📥 Import</button>
+  </div>
+
+  <div id="importBox" style="display:none; margin-top:12px;">
+    <textarea id="importArea" placeholder="Paste JSON here"
+      style="width:100%; min-height:140px;"></textarea>
+    <div class="form-row" style="margin-top:8px;">
+      <button onclick="importJSON(false)">Replace</button>
+      <button class="outline" onclick="importJSON(true)">Append</button>
+    </div>
+  </div>
+</div>
+
 
 <div class="card">
   <strong>Filters</strong>
