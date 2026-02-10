@@ -9,6 +9,10 @@ window.toggleTheme = () => {
     JSON.stringify(document.body.classList.contains("dark")));
 };
 
+const importBox = document.getElementById("importBox");
+const importArea = document.getElementById("importArea");
+
+
 // ================= ADD QUESTION =================
 window.addQuestion = () => {
   if (!qName.value || !qLink.value) return alert("Name & link required");
@@ -79,7 +83,9 @@ function updateProgress() {
 }
 
 // ================= IMPORT / EXPORT =================
-window.exportJSON = () => {
+
+// Export
+window.exportJSON = function () {
   const blob = new Blob(
     [JSON.stringify(questions, null, 2)],
     { type: "application/json" }
@@ -91,12 +97,15 @@ window.exportJSON = () => {
   a.click();
 };
 
-window.toggleImport = () => {
+// Toggle Import Box
+window.toggleImport = function () {
+  if (!importBox) return;
   importBox.style.display =
     importBox.style.display === "none" ? "block" : "none";
 };
 
-window.importJSON = (append) => {
+// Import
+window.importJSON = function (append) {
   try {
     const data = JSON.parse(importArea.value);
 
@@ -105,7 +114,6 @@ window.importJSON = (append) => {
       return;
     }
 
-    // Basic validation
     data.forEach(q => {
       if (!q.name || !q.link) throw new Error();
       q.tags = q.tags || [];
@@ -121,7 +129,7 @@ window.importJSON = (append) => {
 
     importArea.value = "";
     importBox.style.display = "none";
-  } catch {
+  } catch (e) {
     alert("Invalid JSON");
   }
 };
