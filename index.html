@@ -17,7 +17,6 @@ body.dark {
   --bg:#0f172a; --card:#1e293b; --text:#e5e7eb;
   --muted:#94a3b8; --border:#334155;
 }
-
 * { box-sizing:border-box; font-family:system-ui; }
 body { margin:0; background:var(--bg); color:var(--text); }
 .container { max-width:1150px; margin:40px auto; padding:24px; }
@@ -45,13 +44,11 @@ button {
   font-weight:600;
   cursor:pointer;
 }
-
 button.outline {
   background:transparent;
   color:var(--text);
   border:1px solid var(--border);
 }
-
 .dark-btn {
   width:42px;
   height:42px;
@@ -131,7 +128,7 @@ td.center { text-align:center; }
 <div class="container">
 
 <div class="top-bar">
-  <h1>📘 Coding Progress Tracker</h1>
+  <h1>📘 Coding Tracker</h1>
   <button class="outline dark-btn" onclick="toggleTheme()">🌙</button>
 </div>
 
@@ -166,7 +163,8 @@ td.center { text-align:center; }
   </div>
 
   <div id="importBox" style="display:none; margin-top:12px;">
-    <textarea id="importArea" placeholder="Paste JSON here"></textarea>
+    <textarea id="importArea" placeholder="Paste JSON here"
+      style="width:100%; min-height:140px;"></textarea>
     <div class="form-row" style="margin-top:8px;">
       <button onclick="importJSON(false)">Replace</button>
       <button class="outline" onclick="importJSON(true)">Append</button>
@@ -177,9 +175,12 @@ td.center { text-align:center; }
 <div class="card">
   <strong>Filters</strong>
   <div class="form-row" style="margin-top:10px;">
-    <select id="tagFilter"></select>
+    <select id="tagFilter">
+      <option value="all">All Tags</option>
+    </select>
+
     <select id="difficultyFilter">
-      <option value="all">All</option>
+      <option value="all">All Difficulty</option>
       <option value="easy">Easy</option>
       <option value="medium">Medium</option>
       <option value="hard">Hard</option>
@@ -194,7 +195,7 @@ td.center { text-align:center; }
         <th>Link</th>
         <th>Tags</th>
         <th>Difficulty</th>
-        <th>Completed</th>
+        <th>Done</th>
         <th>Revised</th>
       </tr>
     </thead>
@@ -204,6 +205,6 @@ td.center { text-align:center; }
 
 </div>
 
-<script src="script.js"></script>
+<script src="script.js" type="module"></script>
 </body>
 </html>
