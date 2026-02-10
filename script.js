@@ -1,207 +1,130 @@
-let selectedTag = "all";
-let selectedDifficulty = "all";
+let questions = JSON.parse(localStorage.getItem("questions") || "[]");
 
-// ================= THEME =================
-let questions = [];
-const dark = JSON.parse(localStorage.getItem("darkMode")) || false;
-if (dark) document.body.classList.add("dark");
-
-window.toggleTheme = () => {
-  document.body.classList.toggle("dark");
-  localStorage.setItem(
-    "darkMode",
-    JSON.stringify(document.body.classList.contains("dark"))
-  );
-};
-
-// ================= DOM =================
-const importBox = document.getElementById("importBox");
-const importArea = document.getElementById("importArea");
-
-const tagFilter = document.getElementById("tagFilter");
-const difficultyFilter = document.getElementById("difficultyFilter");
 const tableBody = document.getElementById("tableBody");
 const progressBar = document.getElementById("progressBar");
 const progressText = document.getElementById("progressText");
+const tagFilter = document.getElementById("tagFilter");
+const difficultyFilter = document.getElementById("difficultyFilter");
 
-const qName = document.getElementById("qName");
-const qLink = document.getElementById("qLink");
-const qTags = document.getElementById("qTags");
-const qDifficulty = document.getElementById("qDifficulty");
-
-// ================= FILTER EVENTS =================
-tagFilter.addEventListener("change", e => {
-  selectedTag = e.target.value;
-  render();
-});
-
-difficultyFilter.addEventListener("change", e => {
-  selectedDifficulty = e.target.value;
-  render();
-});
-
-// ================= ADD QUESTION =================
-window.addQuestion = () => {
-  if (!qName.value || !qLink.value) {
-    alert("Name & link required");
-    return;
-  }
-
-  questions.push({
-    name: qName.value,
-    link: qLink.value,
-    tags: qTags.value.split(",").map(t => t.trim()).filter(Boolean),
-    difficulty: qDifficulty.value,
-    completed: false,
-    revised: false
-  });
-
-  qName.value = qLink.value = qTags.value = "";
-  save();
-  render();
-};
-
-// ================= RENDER =================
-window.render = () => {
-  // ---- TAG DROPDOWN (PRESERVE SELECTION)
-  const tagSet = new Set();
-  questions.forEach(q => q.tags.forEach(t => tagSet.add(t)));
-
-  tagFilter.innerHTML = `<option value="all">All Tags</option>`;
-  [...tagSet].sort().forEach(t => {
-    const opt = document.createElement("option");
-    opt.value = t;
-    opt.textContent = t;
-    if (t === selectedTag) opt.selected = true;
-    tagFilter.appendChild(opt);
-  });
-
-  // ---- TABLE
-  tableBody.innerHTML = "";
-
-  questions
-    .filter(q =>
-      (selectedTag === "all" || q.tags.includes(selectedTag)) &&
-      (selectedDifficulty === "all" || q.difficulty === selectedDifficulty)
-    )
-    .forEach((q, i) => {
-      tableBody.innerHTML += `
-        <tr>
-          <td>${i + 1}</td>
-          <td>${q.name}</td>
-          <td>
-            <a class="leetcode-link" href="${q.link}" target="_blank">
-              <img src="assets/leetcode.svg" width="16">
-            </a>
-          </td>
-          <td>
-            ${q.tags.map(t => `<span class="tag">${t}</span>`).join("")}
-          </td>
-          <td>
-            <span class="diff ${q.difficulty}">
-              ${q.difficulty}
-            </span>
-          </td>
-          <td class="center">
-            <input type="checkbox" ${q.completed ? "checked" : ""}
-              onchange="questions[${i}].completed=this.checked;save();render();">
-          </td>
-          <td class="center">
-            <input type="checkbox" ${q.revised ? "checked" : ""}
-              onchange="questions[${i}].revised=this.checked;save();render();">
-          </td>
-        </tr>`;
-    });
-
-  updateProgress();
-};
-
-// ================= PROGRESS =================
-function updateProgress() {
-  const done = questions.filter(q => q.completed).length;
-  const pct = questions.length
-    ? Math.round((done / questions.length) * 100)
-    : 0;
-
-  progressBar.style.width = pct + "%";
-  progressText.textContent = `${pct}% completed (${done}/${questions.length})`;
+/* ---------- UTIL ---------- */
+function save() {
+  localStorage.setItem("questions", JSON.stringify(questions));
 }
 
-// ================= IMPORT / EXPORT =================
-window.exportJSON = () => {
-  const blob = new Blob(
-    [JSON.stringify(questions, null, 2)],
-    { type: "application/json" }
-  );
+function normalize(q) {
+  q.tags = (q.tags || []).map(t => t.toLowerCase());
+  q.difficulty = (q.difficulty || "easy").toLowerCase();
+  q.completed ??= false;
+  q.revised ??= false;
+  return q;
+}
 
+/* ---------- THEME ---------- */
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+}
+
+/* ---------- ADD ---------- */
+function addQuestion() {
+  const q = normalize({
+    name: qName.value.trim(),
+    link: qLink.value.trim(),
+    tags: qTags.value.split(",").map(t => t.trim()).filter(Boolean),
+    difficulty: qDifficulty.value
+  });
+
+  if (!q.name) return;
+
+  questions.push(q);
+  save();
+  render();
+
+  qName.value = qLink.value = qTags.value = "";
+}
+
+/* ---------- IMPORT / EXPORT ---------- */
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(questions, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "coding-tracker-backup.json";
+  a.download = "questions.json";
   a.click();
-};
+}
 
-window.toggleImport = () => {
-  importBox.style.display =
-    importBox.style.display === "none" ? "block" : "none";
-};
+function toggleImport() {
+  importBox.style.display = importBox.style.display === "none" ? "block" : "none";
+}
 
-window.importJSON = append => {
+function importJSON(append) {
   try {
-    const data = JSON.parse(importArea.value);
-    if (!Array.isArray(data)) throw new Error();
-
-    data.forEach(q => {
-      q.tags ??= [];
-      q.completed ??= false;
-      q.revised ??= false;
-      q.difficulty ??= "easy";
-    });
-
+    const data = JSON.parse(importArea.value).map(normalize);
     questions = append ? questions.concat(data) : data;
     save();
     render();
-
     importArea.value = "";
-    importBox.style.display = "none";
   } catch {
     alert("Invalid JSON");
   }
-};
+}
 
-// ================= FIREBASE =================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+/* ---------- RENDER ---------- */
+function render() {
+  tableBody.innerHTML = "";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDl4zL9enxU5JMjb_eXbauS7yRqCDUh1Qk",
-  authDomain: "coding-tracker-4feea.firebaseapp.com",
-  projectId: "coding-tracker-4feea",
-  appId: "1:981547014067:web:c22a572d5dec8df8b9ddc6"
-};
+  const filtered = questions.filter(q =>
+    (tagFilter.value === "all" || q.tags.includes(tagFilter.value)) &&
+    (difficultyFilter.value === "all" || q.difficulty === difficultyFilter.value)
+  );
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+  filtered.forEach((q, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${q.name}</td>
+      <td class="center">
+        <a class="leetcode-link" href="${q.link}" target="_blank">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/LeetCode_logo_black.png">
+        </a>
+      </td>
+      <td>${q.tags.map(t => `<span class="tag">${t}</span>`).join("")}</td>
+      <td><span class="diff ${q.difficulty}">${q.difficulty}</span></td>
+      <td class="center"><input type="checkbox" class="checkbox" ${q.completed ? "checked" : ""}></td>
+      <td class="center"><input type="checkbox" class="checkbox" ${q.revised ? "checked" : ""}></td>
+    `;
 
-let userId = null;
+    tr.querySelectorAll("input").forEach((cb, idx) => {
+      cb.onchange = () => {
+        idx === 0 ? q.completed = cb.checked : q.revised = cb.checked;
+        save();
+        render();
+      };
+    });
 
-signInAnonymously(auth).then(res => {
-  userId = res.user.uid;
-  const ref = doc(db, "users", userId);
-
-  onSnapshot(ref, snap => {
-    if (snap.exists()) {
-      questions = snap.data().questions || [];
-      render();
-    }
+    tableBody.appendChild(tr);
   });
-});
 
-window.save = async () => {
-  if (!userId) return;
-  await setDoc(doc(db, "users", userId), {
-    questions,
-    updatedAt: Date.now()
-  });
-};
+  updateProgress();
+  updateTagFilter();
+}
+
+/* ---------- PROGRESS ---------- */
+function updateProgress() {
+  const done = questions.filter(q => q.completed).length;
+  const total = questions.length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  progressBar.style.width = pct + "%";
+  progressText.textContent = `${done} / ${total} completed (${pct}%)`;
+}
+
+/* ---------- TAG FILTER ---------- */
+function updateTagFilter() {
+  const tags = [...new Set(questions.flatMap(q => q.tags))];
+  tagFilter.innerHTML = `<option value="all">All</option>` +
+    tags.map(t => `<option value="${t}">${t}</option>`).join("");
+}
+
+tagFilter.onchange = difficultyFilter.onchange = render;
+
+/* ---------- INIT ---------- */
+questions = questions.map(normalize);
+render();
