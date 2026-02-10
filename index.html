@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coding Tracker</title>
+
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#6366f1">
-
-<meta charset="UTF-8">
-<title>Coding Tracker</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 :root {
@@ -19,9 +19,7 @@ body.dark {
   --muted:#94a3b8; --border:#334155;
 }
 * { box-sizing:border-box; font-family:system-ui; }
-body {
-  margin:0; background:var(--bg); color:var(--text);
-}
+body { margin:0; background:var(--bg); color:var(--text); }
 .container { max-width:1150px; margin:40px auto; padding:24px; }
 .card {
   background:var(--card); border-radius:14px; padding:20px;
@@ -59,13 +57,7 @@ td.center { text-align:center; }
 a { color:var(--primary); text-decoration:none; }
 </style>
 </head>
-  
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
-}
-</script>
-  
+
 <body>
 <div class="container">
 
@@ -94,9 +86,8 @@ if ("serviceWorker" in navigator) {
   <strong>Import / Export</strong>
   <div class="form-row" style="margin-top:10px;">
     <button onclick="exportJSON()">📤 Export</button>
-    <button class="outline" onclick="showImport()">📥 Import</button>
+    <button class="outline" onclick="toggleImport()">📥 Import</button>
   </div>
-
   <div id="importBox" style="display:none; margin-top:12px;">
     <textarea id="importArea" placeholder="Paste JSON here"></textarea>
     <div class="form-row" style="margin-top:8px;">
@@ -125,14 +116,13 @@ if ("serviceWorker" in navigator) {
 
 </div>
 
+<!-- ================= APP LOGIC ================= -->
 <script>
-let questions = JSON.parse(localStorage.getItem("questions")) || [];
+let questions = [];
 let dark = JSON.parse(localStorage.getItem("darkMode")) || false;
-if(dark) document.body.classList.add("dark");
+if (dark) document.body.classList.add("dark");
 
-function save(){ localStorage.setItem("questions", JSON.stringify(questions)); }
-
-function toggleTheme(){
+function toggleTheme() {
   document.body.classList.toggle("dark");
   localStorage.setItem("darkMode",
     JSON.stringify(document.body.classList.contains("dark")));
@@ -141,9 +131,11 @@ function toggleTheme(){
 function addQuestion(){
   if(!qName.value || !qLink.value) return alert("Name & link required");
   questions.push({
-    name:qName.value, link:qLink.value,
+    name:qName.value,
+    link:qLink.value,
     tags:qTags.value.split(",").map(t=>t.trim()).filter(Boolean),
-    completed:false, revised:false
+    completed:false,
+    revised:false
   });
   qName.value=qLink.value=qTags.value="";
   save(); render();
@@ -157,22 +149,20 @@ function exportJSON(){
   a.click();
 }
 
-function showImport(){
+function toggleImport(){
   importBox.style.display = importBox.style.display==="none"?"block":"none";
 }
 
 function importJSON(append){
   try{
     const data=JSON.parse(importArea.value);
-    if(!Array.isArray(data)) throw "Invalid format";
-    data.forEach(q=>{
-      if(!q.name || !q.link || !Array.isArray(q.tags))
-        throw "Invalid question entry";
-    });
+    if(!Array.isArray(data)) throw 0;
     questions = append ? questions.concat(data) : data;
     save(); render();
     importArea.value=""; importBox.style.display="none";
-  }catch(e){ alert("Invalid JSON"); }
+  }catch{
+    alert("Invalid JSON");
+  }
 }
 
 function updateProgress(){
@@ -189,7 +179,8 @@ function render(){
   [...tags].sort().forEach(t=>tagFilter.innerHTML+=`<option>${t}</option>`);
 
   tableBody.innerHTML="";
-  questions.filter(q=>tagFilter.value==="all"||q.tags.includes(tagFilter.value))
+  questions
+    .filter(q=>tagFilter.value==="all"||q.tags.includes(tagFilter.value))
     .forEach((q,i)=>{
       tableBody.innerHTML+=`
       <tr>
@@ -204,7 +195,53 @@ function render(){
     });
   updateProgress();
 }
-render();
 </script>
+
+<!-- ================= FIREBASE SYNC ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDl4zL9enxU5JMjb_eXbauS7yRqCDUh1Qk",
+  authDomain: "coding-tracker-4feea.firebaseapp.com",
+  projectId: "coding-tracker-4feea",
+  appId: "1:981547014067:web:c22a572d5dec8df8b9ddc6"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let userId = null;
+
+signInAnonymously(auth).then(result => {
+  userId = result.user.uid;
+  const ref = doc(db, "users", userId);
+
+  onSnapshot(ref, snap => {
+    if (snap.exists()) {
+      questions = snap.data().questions || [];
+      render();
+    }
+  });
+});
+
+window.save = async function () {
+  if (!userId) return;
+  await setDoc(doc(db, "users", userId), {
+    questions,
+    updatedAt: Date.now()
+  });
+};
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+
 </body>
 </html>
