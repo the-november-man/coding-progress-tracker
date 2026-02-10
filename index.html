@@ -68,12 +68,6 @@ input, select, textarea {
   color:var(--text);
 }
 
-textarea {
-  width:100%;
-  min-height:140px;
-  resize:vertical;
-}
-
 .form-row { display:flex; gap:10px; flex-wrap:wrap; }
 
 .progress-bg {
@@ -115,7 +109,6 @@ td.center { text-align:center; }
   border-radius:999px;
   font-size:12px;
   font-weight:600;
-  text-transform:capitalize;
 }
 .diff.easy { background:#dcfce7; color:#166534; }
 .diff.medium { background:#fef9c3; color:#854d0e; }
@@ -184,10 +177,7 @@ td.center { text-align:center; }
 <div class="card">
   <strong>Filters</strong>
   <div class="form-row" style="margin-top:10px;">
-    <select id="tagFilter">
-      <option value="all">All</option>
-    </select>
-
+    <select id="tagFilter"></select>
     <select id="difficultyFilter">
       <option value="all">All</option>
       <option value="easy">Easy</option>
@@ -214,7 +204,6 @@ td.center { text-align:center; }
 
 </div>
 
-<!-- IMPORTANT -->
-<script src="script.js" type="module"></script>
+<script src="script.js"></script>
 </body>
 </html>
