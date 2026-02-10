@@ -60,12 +60,18 @@ button.outline {
   font-size:18px;
 }
 
-input, select {
+input, select, textarea {
   padding:10px;
   border-radius:8px;
   border:1px solid var(--border);
   background:transparent;
   color:var(--text);
+}
+
+textarea {
+  width:100%;
+  min-height:140px;
+  resize:vertical;
 }
 
 .form-row { display:flex; gap:10px; flex-wrap:wrap; }
@@ -109,6 +115,7 @@ td.center { text-align:center; }
   border-radius:999px;
   font-size:12px;
   font-weight:600;
+  text-transform:capitalize;
 }
 .diff.easy { background:#dcfce7; color:#166534; }
 .diff.medium { background:#fef9c3; color:#854d0e; }
@@ -158,7 +165,7 @@ td.center { text-align:center; }
   </div>
 </div>
 
-  <div class="card">
+<div class="card">
   <strong>Import / Export</strong>
   <div class="form-row" style="margin-top:10px;">
     <button onclick="exportJSON()">📤 Export</button>
@@ -166,8 +173,7 @@ td.center { text-align:center; }
   </div>
 
   <div id="importBox" style="display:none; margin-top:12px;">
-    <textarea id="importArea" placeholder="Paste JSON here"
-      style="width:100%; min-height:140px;"></textarea>
+    <textarea id="importArea" placeholder="Paste JSON here"></textarea>
     <div class="form-row" style="margin-top:8px;">
       <button onclick="importJSON(false)">Replace</button>
       <button class="outline" onclick="importJSON(true)">Append</button>
@@ -175,15 +181,15 @@ td.center { text-align:center; }
   </div>
 </div>
 
-
 <div class="card">
   <strong>Filters</strong>
   <div class="form-row" style="margin-top:10px;">
-    <select id="tagFilter" onchange="render()">
-      <option value="all">All Tags</option>
+    <select id="tagFilter">
+      <option value="all">All</option>
     </select>
-    <select id="difficultyFilter" onchange="render()">
-      <option value="all">All Difficulty</option>
+
+    <select id="difficultyFilter">
+      <option value="all">All</option>
       <option value="easy">Easy</option>
       <option value="medium">Medium</option>
       <option value="hard">Hard</option>
